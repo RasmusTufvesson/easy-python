@@ -1,6 +1,6 @@
 import pygame
 import os
-import baseez
+from baseez import *
 
 class Image:
     def __init__(self, path: str):
