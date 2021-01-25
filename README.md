@@ -5,10 +5,10 @@ easy-python libraries are python libraries that are supposed to make tasks easy
 
 ## Needed libs
 Baseez:
- * No libs
+  No libs
 
 Pgez:
- * Pygame
+ * pygame
 
 Pbez:
  * pyautogui
