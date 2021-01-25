@@ -1,6 +1,33 @@
 import pygame
 import os
+import time
 from baseez import *
+
+class GameClosed(Exception):
+    pass
+
+class CloseWriting(Exception):
+    pass
+
+class _KeyBase:
+    def __init__(self, keyname=None, keynum=None):
+        if keyname == None and keynum == None:
+            raise TypeError("no key identifiers(keynum, keyname) provided")
+        if keynum != None:
+            self.key = keynum
+            self.name = pygame.key.name(keynum)
+        elif keyname != None:
+            self.name = keyname
+            self.key = pygame.key.key_code(keyname)
+    
+    def get(self):
+        return self.key
+
+class Key(_KeyBase):
+    RETURN = _KeyBase(keynum = pygame.K_RETURN)
+    BACKSPACE = _KeyBase(keynum = pygame.K_BACKSPACE)
+    SPACE = _KeyBase(keynum = pygame.K_SPACE)
+    ESC = _KeyBase(keynum = pygame.K_ESCAPE)
 
 class Image:
     def __init__(self, path: str):
@@ -75,7 +102,7 @@ class Text:
         self.pos = pos
         self.image = self.font.get().render(self.text, self.color)
 
-    def change_text(self, text: str):
+    def change_text(self, text: str, *trash):
         self.text = text
         self.render()
     
@@ -116,25 +143,30 @@ class App:
 
     def tick(self):
         if not self.disabled:
-            if self.background != None:
-                self.screen.fill(self.background)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.disabled = True
                     pygame.quit()
                     return
                     #print ("shuting down")
-            for obj in self.object_array:
-                self.screen.blit(*obj.get_blit())
-                #box = pygame.image.load("D:/Rasmus/python/chicken game/art/chicken_l_golden.png").get_rect()
-                #box.center = (100, 100)
-                #self.screen.blit(pygame.image.load("D:/Rasmus/python/chicken game/art/chicken_l_golden.png"), box)#print ("doing blit")
-            pygame.display.update()
+            
+            self._display_all()
+
             self.clock.tick(self.speed)
         #else:
         #    print ("bye!")
         #    pygame.quit()
     
+    def _display_all(self):
+        if self.background != None:
+            self.screen.fill(self.background)
+        for obj in self.object_array:
+            self.screen.blit(*obj.get_blit())
+            #box = pygame.image.load("D:/Rasmus/python/chicken game/art/chicken_l_golden.png").get_rect()
+                #box.center = (100, 100)
+                #self.screen.blit(pygame.image.load("D:/Rasmus/python/chicken game/art/chicken_l_golden.png"), box)#print ("doing blit")
+        pygame.display.update()
+
     def add_object(self, obj: Object):
         self.object_array.append(obj)
         print (self.object_array)
@@ -154,3 +186,42 @@ class MainLoop:
         while not self.app.disabled:
             self.app.tick()
             #print ("tick!")
+
+class UserSingleLineText(Text):
+    def await_user_input(self, app: App, text_change_call = self.change_text, cooldown = 0.1):
+        def key_await():
+            key_gotten = False
+            while not key_gotten:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        key_gotten = True
+                        raise GameClosed()
+                    elif event.type == pygame.KEYDOWN:
+                        return Key(keynum = event.key)
+        closed = False
+        while not closed:
+            key = key_await()
+            if key.key == Key.RETURN:
+                closed = True
+                text_change_call("", key)
+            else:
+                text_change_call(self.text+key.name, key)
+                app._display_all()
+            time.sleep(cooldown)
+
+class UserText(UserSingleLineText):
+    def _change_call(self, text, key):
+        self.change_text(text)
+        if key.key == Key.RETURN:
+            self.change_text(self.text+"\n")
+        elif key.key == self.close_key:
+            self.continue_with_writing = False
+            raise CloseWriting
+    def await_user_input(self, app: App, close_key = Key.ESC, cooldown = 0.1):
+        self.continue_with_writing = True
+        self.close_key = close_key
+        while self.continue_with_writing:
+            try:
+                super().await_user_input(app, text_change_call = self._change_call, cooldown = cooldown)
+            except CloseWriting:
+                pass
