@@ -9,6 +9,7 @@ Baseez:
 
 Pgez:
  * pygame
+ * baseez
 
 Pbez:
  * pyautogui

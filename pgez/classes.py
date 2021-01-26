@@ -36,7 +36,7 @@ class Image:
         return self.image
 
 class Object:
-    def __init__(self, image: Image, pos: Vector2 = Vector2.ZERO):
+    def __init__(self, image: Image = None, pos: Vector2 = Vector2.ZERO):
         self.image = image
         self.pos = pos
     
@@ -137,13 +137,14 @@ class EventListener:
         if self.event():
             self.result()
 
+class Box(pygame.Rect):
+    pass
 
-
-class Button(EventListener, Object):
-    def __init__(self, image: Image, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 2):
-        Object.__init__(self, image, pos)#print (list(super()))
+class MouseOverBox(EventListener, Object):
+    def __init__(self, box: Box, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0):
+        Object.__init__(self, None, pos)#print (list(super()))
         EventListener.__init__(self, self.event_check, press_function)
-        self.box = image.get().get_rect()
+        self.box = box#image.get().get_rect()
         self.box.center = pos
         self.cooldown = cooldown
         self.max_cooldown = cooldown
@@ -162,6 +163,65 @@ class Button(EventListener, Object):
     def event_check(self):
         mouse = pygame.mouse.get_pos()
         return self.box.collidepoint(mouse)
+
+class MouseOverImage(MouseOverBox):
+    def __init__(self, image: Image, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0):
+        MouseOverBox.__init__(self, image.get.get_rect(), press_function, pos, cooldown)
+        #Object.__init__(self, image, pos)#print (list(super()))
+        #EventListener.__init__(self, self.event_check, press_function)
+        #self.box = image.get().get_rect()
+        #self.box.center = pos
+        #self.cooldown = cooldown
+        #self.max_cooldown = cooldown
+    
+    #def tick(self):
+    #    self.cooldown -= 1
+    #    if self.cooldown < 1:
+    #        self.cooldown = self.max_cooldown
+    #        if self.event():
+    #            self.result()
+    
+    #def change_pos(self, new_pos):
+    #    self.pos = new_pos
+    #    self.box.center = self.pos
+    
+    #def event_check(self):
+    #    if pygame.mouse.get_presses()[0]:
+    #        mouse = pygame.mouse.get_pos()
+    #        return self.box.collidepoint(mouse)
+    #    else:
+    #        return False
+
+class ClickBox(EventListener, Object):
+    def __init__(self, box: Box, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0.2):
+        Object.__init__(self, None, pos)#print (list(super()))
+        EventListener.__init__(self, self.event_check, press_function)
+        self.box = box#image.get().get_rect()
+        self.box.center = pos
+        self.cooldown = cooldown
+        self.max_cooldown = cooldown
+    
+    def tick(self):
+        self.cooldown -= 1
+        if self.cooldown < 1:
+            self.cooldown = self.max_cooldown
+            if self.event():
+                self.result()
+    
+    def change_pos(self, new_pos):
+        self.pos = new_pos
+        self.box.center = self.pos
+    
+    def event_check(self):
+        if pygame.mouse.get_presses()[0]:
+            mouse = pygame.mouse.get_pos()
+            return self.box.collidepoint(mouse)
+        else:
+            return False
+
+class ClickImage(ClickBox):
+    def __init__(self, image: Image, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0.2):
+        ClickBox.__init__(self, image.get.get_rect(), press_function, pos, cooldown)
 
 class App:
     #disabled = False
@@ -202,7 +262,8 @@ class App:
         if self.background != None:
             self.screen.fill(self.background)
         for obj in self.object_array:
-            self.screen.blit(*obj.get_blit())
+            if obj.image != None:
+                self.screen.blit(*obj.get_blit())
             #box = pygame.image.load("D:/Rasmus/python/chicken game/art/chicken_l_golden.png").get_rect()
                 #box.center = (100, 100)
                 #self.screen.blit(pygame.image.load("D:/Rasmus/python/chicken game/art/chicken_l_golden.png"), box)#print ("doing blit")
