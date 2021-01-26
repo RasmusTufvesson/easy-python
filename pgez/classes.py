@@ -167,30 +167,32 @@ class MouseOverBox(EventListener, Object):
 class MouseOverImage(MouseOverBox):
     def __init__(self, image: Image, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0):
         MouseOverBox.__init__(self, image.get.get_rect(), press_function, pos, cooldown)
-        #Object.__init__(self, image, pos)#print (list(super()))
-        #EventListener.__init__(self, self.event_check, press_function)
-        #self.box = image.get().get_rect()
-        #self.box.center = pos
-        #self.cooldown = cooldown
-        #self.max_cooldown = cooldown
+
+class MouseOverAnimatedImage(MouseOverBox, AnimatedObject):
+    def __init__(self, dir_path: str, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0, frames_between_animation_tick: int = 0):
+        self.animation_frames = self._get_animation_frames(dir_path)
+        MouseOverBox.__init__(self, self.animation_frames[0].get.get_rect(), press_function, pos, cooldown)#super().__init__(self.animation_frames[0], pos)
+        self.fbat = frames_between_animation_tick
+        self.paused = False
+        self.frame = 0
+        self.frame_timer = self.fbat
+        self.frame_number = len(self.animation_frames)
     
-    #def tick(self):
-    #    self.cooldown -= 1
-    #    if self.cooldown < 1:
-    #        self.cooldown = self.max_cooldown
-    #        if self.event():
-    #            self.result()
-    
-    #def change_pos(self, new_pos):
-    #    self.pos = new_pos
-    #    self.box.center = self.pos
-    
-    #def event_check(self):
-    #    if pygame.mouse.get_presses()[0]:
-    #        mouse = pygame.mouse.get_pos()
-    #        return self.box.collidepoint(mouse)
-    #    else:
-    #        return False
+    def tick(self):
+        if not self.paused:
+            if self.frame_timer == 0:
+                self.frame_timer = self.fbat+1
+                self.image = self.animation_frames[self.frame]
+                self.frame += 1
+                if self.frame > self.frame_number-1:
+                    self.frame = 0
+            self.frame_timer -= 1
+        
+        self.cooldown -= 1
+        if self.cooldown < 1:
+            self.cooldown = self.max_cooldown
+            if self.event():
+                self.result()
 
 class ClickBox(EventListener, Object):
     def __init__(self, box: Box, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0.2):
@@ -222,6 +224,32 @@ class ClickBox(EventListener, Object):
 class ClickImage(ClickBox):
     def __init__(self, image: Image, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0.2):
         ClickBox.__init__(self, image.get.get_rect(), press_function, pos, cooldown)
+
+class ClickAnimatedImage(MouseOverBox, AnimatedObject):
+    def __init__(self, dir_path: str, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0, frames_between_animation_tick: int = 0):
+        self.animation_frames = self._get_animation_frames(dir_path)
+        MouseOverBox.__init__(self, self.animation_frames[0].get.get_rect(), press_function, pos, cooldown)#super().__init__(self.animation_frames[0], pos)
+        self.fbat = frames_between_animation_tick
+        self.paused = False
+        self.frame = 0
+        self.frame_timer = self.fbat
+        self.frame_number = len(self.animation_frames)
+    
+    def tick(self):
+        if not self.paused:
+            if self.frame_timer == 0:
+                self.frame_timer = self.fbat+1
+                self.image = self.animation_frames[self.frame]
+                self.frame += 1
+                if self.frame > self.frame_number-1:
+                    self.frame = 0
+            self.frame_timer -= 1
+        
+        self.cooldown -= 1
+        if self.cooldown < 1:
+            self.cooldown = self.max_cooldown
+            if self.event():
+                self.result()
 
 class App:
     #disabled = False
