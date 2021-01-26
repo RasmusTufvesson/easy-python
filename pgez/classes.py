@@ -36,7 +36,7 @@ class Image:
         return self.image
 
 class Object:
-    def __init__(self, image: Image = None, pos: Vector2 = Vector2.ZERO):
+    def __init__(self, image: Image, pos: Vector2 = Vector2.ZERO):
         self.image = image
         self.pos = pos
     
@@ -137,12 +137,20 @@ class EventListener:
         if self.event():
             self.result()
 
+class KeyListener(EventListener):
+    def __init__(self, key: Key, press_function):
+        self.key = key
+        super().__init__(self, self.key_check, press_function)
+    
+    def key_check(self):
+        return pygame.key.get_pressed()[self.key.get()]
+
 class Box(pygame.Rect):
     pass
 
-class MouseOverBox(EventListener, Object):
+class MouseOverBox(EventListener):
     def __init__(self, box: Box, press_function, pos: Vector2 = Vector2.ZERO, cooldown = 0):
-        Object.__init__(self, None, pos)#print (list(super()))
+        #Object.__init__(self, None, pos)#print (list(super()))
         EventListener.__init__(self, self.event_check, press_function)
         self.box = box#image.get().get_rect()
         self.box.center = pos
