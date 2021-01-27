@@ -13,6 +13,3 @@ Pgez:
 
 Pbez:
  * pyautogui
- * keyboard
- * opencv-python
- * pywin32
